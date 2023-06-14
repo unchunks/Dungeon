@@ -8,12 +8,15 @@ public:
     void randomMove();
     void setState(STATE state);
 
+    std::vector<vec2> toPlayer;
+    int elapsedTurn;
+
 private:
 
 };
 
 AI::AI(int _x, int _y, int _maxHP, int _STR, int _VIT)
-: Actor(_x, _y, _maxHP, _STR, _VIT, SEARCH, DOWN)
+: Actor(_x, _y, _maxHP, _STR, _VIT, SEARCH, DOWN), elapsedTurn(15)
 {
 }
 

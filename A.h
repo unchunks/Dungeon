@@ -7,8 +7,6 @@
 
 #include "DDefine.h"
 
-const int MapWidth = 5;
-const int MapHeight = 5;
 const int Infinity = 100000;
 
 enum EraseResult
@@ -19,23 +17,23 @@ enum EraseResult
 };
 
 // Map
-struct Cell
-{
-	Cell() :
-		X(-1),
-		Y(-1)
-	{
-	}
+// struct Cell
+// {
+// 	Cell() :
+// 		X(-1),
+// 		Y(-1)
+// 	{
+// 	}
 
-	Cell(int x, int y)
-	{
-		X = x;
-		Y = y;
-	}
+// 	Cell(int x, int y)
+// 	{
+// 		X = x;
+// 		Y = y;
+// 	}
 
-	int X;		
-	int Y;		
-};
+// 	int X;		
+// 	int Y;		
+// };
 
 struct Node
 {
@@ -52,7 +50,7 @@ struct Node
 		AdjacentNodes.clear();
 	}
 
-	Cell Position;						
+	vec2 Position;						
 	std::vector<Node*> AdjacentNodes;	
 	float HeuristicCost;				
 	float TotalCost;					
@@ -77,9 +75,9 @@ bool Less(Node* a, Node* b)
 bool IsCellWithinTheRange(int x, int y)
 {
 	if (x >= 0 &&
-		x < MapWidth &&
+		x < FLOOR_W &&
 		y >= 0 &&
-		y < MapHeight)
+		y < FLOOR_H)
 	{
 		return true;
 	}
@@ -88,7 +86,7 @@ bool IsCellWithinTheRange(int x, int y)
 }
 
 // ノード作成
-void CreateMap()
+void CreateBuffMap()
 {
     for (int y = 0; y < FLOOR_H; y++)
 	{
@@ -104,24 +102,24 @@ void CreateMap()
 	{
 		for (int x = 0; x < FLOOR_W; x++)
 		{
-			Map[y][x].Position.X = x;
-			Map[y][x].Position.Y = y;
+			Map[y][x].Position.x = x;
+			Map[y][x].Position.y = y;
 
-			Cell adjacent_cells[] = 
+			vec2 adjacent_cells[] = 
 			{
-				Cell(x, y - 1),
-				Cell(x - 1, y),
-				Cell(x + 1, y),
-				Cell(x, y + 1),
+				vec2(x, y - 1),
+				vec2(x - 1, y),
+				vec2(x + 1, y),
+				vec2(x, y + 1),
 			};
 
 			// 隣接ノード追加
-			for (const Cell& cell : adjacent_cells)
+			for (const vec2& cell : adjacent_cells)
 			{
-				if (IsCellWithinTheRange(cell.X, cell.Y) == true &&
-					CostTable[cell.Y][cell.X] == 1)
+				if (IsCellWithinTheRange(cell.x, cell.y) == true &&
+					CostTable[cell.y][cell.x] == 1)
 				{
-					Map[y][x].AdjacentNodes.push_back(&Map[cell.Y][cell.X]);
+					Map[y][x].AdjacentNodes.push_back(&Map[cell.y][cell.x]);
 				}
 			}
 		}
@@ -131,9 +129,9 @@ void CreateMap()
 // コスト初期化
 void InitCost(int heuristic_cost, int total_cost)
 {
-	for (int y = 0; y < MapHeight; y++)
+	for (int y = 0; y < FLOOR_H; y++)
 	{
-		for (int x = 0; x < MapWidth; x++)
+		for (int x = 0; x < FLOOR_W; x++)
 		{
 			Map[y][x].HeuristicCost = heuristic_cost;
 			Map[y][x].TotalCost = total_cost;
@@ -143,16 +141,16 @@ void InitCost(int heuristic_cost, int total_cost)
 
 float CalculateHeuristic(const Node* node, const Node* Goal)
 {
-	float x = fabsf(Goal->Position.X - node->Position.X);
-	float y = fabsf(Goal->Position.Y - node->Position.Y);
+	float x = fabsf(Goal->Position.x - node->Position.x);
+	float y = fabsf(Goal->Position.y - node->Position.y);
 
 	return sqrtf(x * x + y * y);
 }
 
-bool IsEqualCell(const Cell& a, const Cell& b)
+bool IsEqualCell(const vec2& a, const vec2& b)
 {
-	if (a.X == b.X &&
-		a.Y == b.Y)
+	if (a.x == b.x &&
+		a.y == b.y)
 	{
 		return true;
 	}
@@ -213,22 +211,22 @@ bool AddAdjacentNode(std::list<Node*>& open_list, std::list<Node*>& close_list, 
 	return false;
 }
 
-void AStar(Cell start, Cell goal)
+std::vector<vec2> AStar(vec2 start, vec2 goal)
 {
 	std::list<Node*> open_list;
 	std::list<Node*> close_list;
 
 	//const Node* start_node = &Map[start.Y][start.X];
-	const Node* goal_node = &Map[goal.Y][goal.X];
+	const Node* goal_node = &Map[goal.y][goal.x];
 
 	// 更新ノード位置保存
-	Cell last_update_cells[MapHeight][MapWidth];
+	vec2 last_update_cells[FLOOR_H][FLOOR_W];
 
 	// グラフ初期化
 	InitCost(Infinity, 0);
 
 	// スタートノード指定
-	open_list.push_back(&Map[start.Y][start.X]);
+	open_list.push_back(&Map[start.y][start.x]);
 
 	int count = 0;
 
@@ -258,7 +256,7 @@ void AStar(Cell start, Cell goal)
 			}
 
 			// ノード間コスト
-			float edge_cost = CostTable[adjacent_node->Position.Y][adjacent_node->Position.X];
+			float edge_cost = CostTable[adjacent_node->Position.y][adjacent_node->Position.x];
 			// 総コスト
 			float node_cost = search_node->TotalCost;
 			float total_cost = edge_cost + adjacent_node->HeuristicCost + node_cost;
@@ -269,14 +267,14 @@ void AStar(Cell start, Cell goal)
 				// 総コスト更新
 				adjacent_node->TotalCost = total_cost;
 
-				if (adjacent_node->Position.Y == 0 && adjacent_node->Position.X == 2)
+				if (adjacent_node->Position.y == 0 && adjacent_node->Position.x == 2)
 				{
 					int xx = 0;
 					xx = 100;
 				}
 
 				// 更新セル保存
-				last_update_cells[adjacent_node->Position.Y][adjacent_node->Position.X] = search_node->Position;
+				last_update_cells[adjacent_node->Position.y][adjacent_node->Position.x] = search_node->Position;
 			}
 		}
 
@@ -304,30 +302,30 @@ void AStar(Cell start, Cell goal)
 	}
 
 	// 経路復元
-	std::list<Cell> route_list;
+	std::list<vec2> route_list;
 
 	// ゴールから復元
 	route_list.push_back(goal);
 	while (route_list.empty() == false)
 	{
-		Cell route = route_list.front();
+		vec2 route = route_list.front();
 
 		// スタート位置なら終了
 		if (IsEqualCell(route, start) == true)
 		{
 			// 復元経路表示
-			for (Cell& cell : route_list)
+			for (vec2& cell : route_list)
 			{
-				printf("x = %d y = %d\n", cell.X, cell.Y);
+				printf("x = %d y = %d\n", cell.x, cell.y);
 			}
 			break;
 		}
 		else
 		{
-			if (IsCellWithinTheRange(route.X, route.Y) == true)
+			if (IsCellWithinTheRange(route.x, route.y) == true)
 			{
 				// 追加
-				route_list.push_front(last_update_cells[route.Y][route.X]);
+				route_list.push_front(last_update_cells[route.y][route.x]);
 			}
 			else
 			{
@@ -338,16 +336,6 @@ void AStar(Cell start, Cell goal)
 	}
 
 	printf("探索回数 = %d\n", count);
+
+	return std::vector<vec2> (++route_list.begin(), route_list.end());
 }
-
-// int main()
-// {
-// 	CreateMap();
-
-// 	Cell start = Cell(3, 1);
-// 	Cell goal = Cell(0, 0);
-
-// 	AStar(start, goal);
-
-// 	return 0;
-// }

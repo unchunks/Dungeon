@@ -1,3 +1,6 @@
+d: d.cpp
+	g++ d.cpp -o d.out && ./d.out
+
 d1: d1.cpp
 	g++ d1.cpp -o d1.out && ./d1.out
 

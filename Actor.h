@@ -3,6 +3,23 @@
 #include <vector>
 #include <cstdlib>
 
+struct vec2{
+    vec2() :
+		x(-1),
+		y(-1)
+	{
+	}
+
+	vec2(int _x, int _y)
+	{
+		x = _x;
+		y = _y;
+	}
+
+    int x;
+    int y;
+};
+
 class Actor {
 public:
     enum STATE {
@@ -11,6 +28,7 @@ public:
         // AI
         SEARCH,
         FOUND,
+        ATTACK,
         ESCAPE,
         // both
         DEAD
@@ -24,8 +42,9 @@ public:
 
     Actor(int _x, int _y, int _maxHP, int _STR, int _VIT, STATE _state, DIRECTION _dir);
     void move(DIRECTION dir);
+    void moveTo(vec2 v);
     void back();
-    void attack(class Actor enemy);
+    void attack(class Actor& enemy);
     void receiveDamage(int damage);
 
     void setPos(int _x, int _y);
@@ -59,6 +78,13 @@ void Actor::move(DIRECTION dir) {
     mDir = dir;
 }
 
+void Actor::moveTo(vec2 v) {
+    if(v.x > x) move(RIGHT);
+    else if(v.x < x) move(LEFT);
+    else if(v.y > y) move(DOWN);
+    else move(UP);
+}
+
 void Actor::back() {
     switch (mDir) {
         case LEFT:  x++; break;
@@ -68,8 +94,8 @@ void Actor::back() {
     }
 }
 
-void Actor::attack(Actor enemy) {
-    enemy.receiveDamage(STR);
+void Actor::attack(Actor& enemy) {
+    enemy->receiveDamage(STR);
 }
 
 void Actor::receiveDamage(int damage) {

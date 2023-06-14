@@ -41,6 +41,22 @@ bool canGetOn(int x, int y, ACTOR_TYPE type) {
     return true;
 }
 
+bool canAttack(int x, int y) {
+    if(isPlayerPos(x+1, y)
+    || isPlayerPos(x-1, y)
+    || isPlayerPos(x, y+1)
+    || isPlayerPos(x, y-1)) {
+        return true;
+    }
+    if(isEnemiesPos(x+1, y)
+    || isEnemiesPos(x-1, y)
+    || isEnemiesPos(x, y+1)
+    || isEnemiesPos(x, y-1)) {
+        return true;
+    }
+    return false;
+}
+
 //TODO:テスト中
 #include "AStar.h"
 
@@ -224,6 +240,7 @@ void arrangementEnemy(int roomCount) {
 #include <iomanip>
 
 void output() {
+    std::cout << "  ";
     for(int x=0; x<FLOOR_W; x++)
         std::cout << std::setw(2) << x;
     std::cout << "\n";
@@ -296,16 +313,32 @@ void enemyMove() {
                     }
                 }
                 break;
+
             case Actor::FOUND:
-                CreateMap();
-
-                Cell start = Cell(e.getX(), e.getY());
-                Cell goal = Cell(player.getX(), player.getY());
-
-                AStar(start, goal);
+                // プレイヤーへの経路探索
+                if(e.elapsedTurn > 5) {
+                    CreateBuffMap();
+                    vec2 start = vec2(e.getX(), e.getY());
+                    vec2 goal = vec2(player.getX(), player.getY());
+                    e.toPlayer = AStar(start, goal);
+                    e.elapsedTurn = 0;
+                }
+                e.moveTo(e.toPlayer[e.elapsedTurn]);
+                e.elapsedTurn++;
+                if(canAttack(player.getX(), player.getY())) {
+                    e.setState(Actor::ATTACK);
+                }
+                if(!isFound(e)) {
+                    e.setState(Actor::SEARCH);
+                }
                 break;
-            // case Actor::ESCAPE:
-            //     break;
+
+            case Actor::ATTACK:
+                e.attack(&player);
+                break;
+
+            case Actor::ESCAPE:
+                break;
         }
     }
 }
