@@ -1,6 +1,6 @@
 // オリジナル
 
-#include "../DMethod.h"
+#include "DMethod.h"
 
 void Original() {
     for(int i = 0; i < AREA_MAX; i++) {

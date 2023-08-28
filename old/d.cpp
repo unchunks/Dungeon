@@ -1,5 +1,5 @@
-#include "generateDungeons/AreaDivisionMethod.h"
-#include "generateDungeons/OriginalMethod.h"
+#include "AreaDivisionMethod.h"
+#include "OriginalMethod.h"
 
 using namespace std;
 

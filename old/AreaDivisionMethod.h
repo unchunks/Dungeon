@@ -1,6 +1,6 @@
 // 区域分割法
 
-#include "../DMethod.h"
+#include "DMethod.h"
 
 int areaCount = 0;
 int randomNumber;
