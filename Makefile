@@ -1,2 +1,2 @@
-all : dungeon.cpp
-	g++ dungeon.cpp -o dungeon && ./dungeon
+all : main.cpp
+	g++ main.cpp -o dungeon && ./dungeon

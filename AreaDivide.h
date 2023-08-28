@@ -1,21 +1,23 @@
 #pragma once
 
-#include <iostream>
-#include <random>
+#include <random> 
 
-#include "common.h"
+#include "Generator.h"
 
-using namespace std;
+class AreaDivide : public Generator
+{
+public:
+    void generate();
+private:
+    void divide(int areaID);
+};
 
-int areaCount = 0;
-
-void divide(int areaID)
+void AreaDivide::divide(int areaID)
 {
     if(areaCount > AREA_MAX) {
         return;
     }
-
-    int newAreaID = areaCount;
+    int newAreaID = areaCount + 1;
 // エリア分割が失敗したと用に値を退避
     int w = areas[areaID].w;
     int h = areas[areaID].h;
@@ -44,12 +46,44 @@ void divide(int areaID)
             areas[areaID].h = h;
             return;
     }
-
     areaCount++;
-    devidArea(randomNumber % areaCount);
+    divide(randomNumber % areaCount);
 }
 
-void generate()
+void AreaDivide::generate()
 {
+    std::random_device seed;
+    std::mt19937 engine(seed());
+    std::uniform_int_distribution<int> randNum(AREA_MAX, 100);
+    randomNumber = randNum(engine);
 
+    areas = std::vector<Area>(AREA_MAX, Area(0, 0, FLOOR_W, FLOOR_H));
+    areaCount = 0;
+    divide(areaCount);
+
+// 各エリアに対する処理
+    for(int i=0; i<areaCount; i++) {
+// 部屋の領域作成
+        areas[i].room = Room(
+            areas[i].x + ROOM_MARGIN, 
+            areas[i].y + ROOM_MARGIN, 
+            areas[i].w - (ROOM_MARGIN * 2), 
+            areas[i].h - (ROOM_MARGIN * 2)
+        );
+// 通路作成
+        for(int y=areas[i].y; y<areas[i].y + areas[i].h; y++) {
+            floorTYPE[y][areas[i].room.x + areas[i].room.w + 1] = AISLE;
+            floorTYPE[y][areas[i].room.x + (randomNumber % (areas[i].room.w - 2)) + 1] = AISLE;
+        }
+        for(int x=areas[i].x; x<areas[i].x + areas[i].w; x++) {
+            floorTYPE[areas[i].room.y + areas[i].room.h + 1][x] = AISLE;
+            floorTYPE[areas[i].room.y + (randomNumber % (areas[i].room.h - 2)) + 1][x] = AISLE;
+        }
+// 部屋作成
+        for(int y=areas[i].room.y; y<areas[i].room.y + areas[i].room.h; y++) {
+            for(int x=areas[i].room.x; x<areas[i].room.x + areas[i].room.w; x++) {
+                floorTYPE[y][x] = FLOOR;
+            }
+        }
+    }
 }
