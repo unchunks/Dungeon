@@ -6,6 +6,6 @@ commit : *
 	git commit -m "$(m)"
 
 push : *
-	git add -A &&
-	git commit -m "$(m)" &&
+	git add -A
+	git commit -m "$(m)"
 	git push
