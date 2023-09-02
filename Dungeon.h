@@ -29,7 +29,7 @@ private:
 
     Player player = Player(0, 0, 0, 0, 0);
     std::vector<Enemy> enemies = std::vector<Enemy>(NUM_ENEMY, Enemy(0, 0, 0, 0, 0));
-    std::vector<Actor> actors = std::vector<Actor>(0);
+    std::vector<Actor> actors = std::vector<Actor>();
 
 // プレイヤーと敵についての関数
     int isOtherPos(int x, int y);
