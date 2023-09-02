@@ -1,11 +1,11 @@
 all : main.cpp
 	g++ main.cpp -o dungeon && ./dungeon
 
-commit : *
+commit-% :
 	git add -A
-	git commit -m "$(m)"
+	git commit -m "${@:commit-%=%}"
 
-push : *
+push-% :
 	git add -A
-	git commit -m "$(m)"
+	git commit -m "${@:push-%=%}"
 	git push
