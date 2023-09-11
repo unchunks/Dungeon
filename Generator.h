@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "Area.h"
+#include "Room.h"
+#include "Player.h"
+#include "Enemy.h"
 
 const int FLOOR_W = 40;
 const int FLOOR_H = 40;
@@ -47,9 +50,12 @@ public:
     void eraseDeadEnd();
     void randomEraseDeadEnd();
     void identificationWallKind();
-    void output();
+    void output(Player player, std::vector<Enemy> enemies);
 
-    Area getArea(int id);
+    Area getArea(int id) { return areas[id]; }
+    Room getRoom(int id) { return rooms[id]; }
+    int getAreaNum() { return areas.size(); }
+    int getRoomNum() { return rooms.size(); }
 
     int areaCount = 0;
     int randomNumber;
@@ -58,7 +64,8 @@ public:
 
 protected:
     CELL_TYPE floorTYPE[FLOOR_H][FLOOR_W];
-    std::vector<Area> areas = std::vector<Area>(AREA_MAX, Area(0, 0, FLOOR_W, FLOOR_H));
+    std::vector<Area> areas = std::vector<Area>(1, Area(0, 0, FLOOR_W, FLOOR_H));
+    std::vector<Room> rooms = std::vector<Room>(1, Room(ROOM_MARGIN, ROOM_MARGIN, FLOOR_W - 2*ROOM_MARGIN, FLOOR_H - 2*ROOM_MARGIN));
 };
 
 void Generator::initFloor() {
@@ -196,7 +203,7 @@ void Generator::identificationWallKind() {
     }
 }
 
-void Generator::output() {
+void Generator::output(Player player, std::vector<Enemy> enemies) {
     std::cout << "  ";
     for(int x=0; x<FLOOR_W; x++)
         std::cout << std::setw(2) << x;
@@ -204,13 +211,16 @@ void Generator::output() {
     for(int y=0; y<FLOOR_H; y++) {
         std::cout << std::setw(2) << y;
         for(int x=0; x<FLOOR_W; x++) {
-            // if(isPlayerPos(x, y)) {
-            //     cout << "@ ";
-            //     continue;
-            // }
-            // if(isEnemiesPos(x, y)) {
-            //     cout << "E ";
-            //     continue;
+            // SDLでは後ろから重ねて描画する
+            if((player.getX() == x) && (player.getY() == y)) {
+                std::cout << "@ ";
+                continue;
+            }
+            // for(auto c : enemies) {
+            //     if((c.getX() == x) && (c.getY() == y)) {
+            //         std::cout << "E ";
+            //         continue;
+            //     }
             // }
             switch(floorTYPE[y][x]) {
                 case NONE:              std::cout << "~ "; break;
@@ -234,13 +244,15 @@ void Generator::output() {
                 case STEP:              std::cout << "S "; break;
             }
         }
+        // if(isPlayerPos(x, y)) {
+            //     std::cout << "@ ";
+            //     continue;
+            // }
+            // if(isEnemiesPos(x, y)) {
+            //     cout << "E ";
+            //     continue;
+            // }
         std::cout << "\n";
     }
 }
-
-Area Generator::getArea(int id)
-{
-    return areas[id];
-}
-
 

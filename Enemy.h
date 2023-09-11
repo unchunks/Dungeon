@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Actor.h"
+#include "Character.h"
 
-class Enemy : public Actor {
+class Enemy : public Character {
 public:
     Enemy(int _x, int _y, int _maxHP, int _STR, int _VIT);
     void randomMove();
     void setState(STATE state);
 
-    std::vector<vec2> toPlayer;
+    std::vector<glm::vec2> toPlayer;
     int elapsedTurn;
 
 private:
@@ -16,7 +16,7 @@ private:
 };
 
 Enemy::Enemy(int _x, int _y, int _maxHP, int _STR, int _VIT)
-: Actor(_x, _y, _maxHP, _STR, _VIT, SEARCH, DOWN), elapsedTurn(15)
+: Character(_x, _y, _maxHP, _STR, _VIT, SEARCH, DOWN, ENEMY), elapsedTurn(15)
 {
 }
 

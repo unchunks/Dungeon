@@ -1,19 +1,14 @@
 #pragma once
 
-#include "Actor.h"
+#include "Character.h"
 
-class Player : public Actor
+class Player : public Character
 {
 public:
     Player(int _x, int _y, int _maxHP, int _STR, int _VIT);
-    void setState(STATE state);
 };
 
 Player::Player(int _x, int _y, int _maxHP, int _STR, int _VIT)
-: Actor(_x, _y, _maxHP, _STR, _VIT, ALIVE, DOWN)
+: Character(_x, _y, _maxHP, _STR, _VIT, ALIVE, DOWN, PLAYER)
 {
-}
-
-void Player::setState(STATE state) {
-    mState = state;
 }
