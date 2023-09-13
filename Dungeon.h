@@ -20,6 +20,8 @@ public:
     void run();
     void quit();
 
+    void update();
+
 private:
     char input = 'a';
     bool isRunning = true;
@@ -57,11 +59,33 @@ void Dungeon::run()
         areaDivide.output(player, enemies);
         std::cin >> input;
         if(input == 'q') isRunning = false;
+        update();
     }
 }
 
 void Dungeon::quit()
 {
+}
+
+void Dungeon::update()
+{
+    switch(input)
+    {
+        case 'w':
+            player.move(DIRECTION::UP);
+            break;
+        case 'a':
+            player.move(DIRECTION::LEFT);
+            break;
+        case 's':
+            player.move(DIRECTION::DOWN);
+            break;
+        case 'd':
+            player.move(DIRECTION::RIGHT);
+            break;
+    }
+    if(!canGetOn(player.getX(), player.getY()))
+        player.back();
 }
 
 
@@ -80,11 +104,13 @@ int Dungeon::isOtherPos(int x, int y)
 
 bool Dungeon::canGetOn(int x, int y) 
 {
-    if((areaDivide.buff[y][x] != FLOOR) && (areaDivide.buff[y][x] != AISLE)) 
+    std::cout << "1\n";
+    if((areaDivide.buff[y+1][x+1] != FLOOR) && (areaDivide.buff[y+1][x+1] != AISLE)) 
         return false;
-    if(isOtherPos(x, y) > 1) 
-        return false; 
-    if(isPlayerPos(x, y)) return false;
+    std::cout << "2\n";
+    if(isOtherPos(x, y)  > 1)
+        return false;
+    std::cout << "3\n";
     // int same = 0;
     // for(Character a : actors) {
     //     if(isEnemyPos(e, x, y)) same++;
