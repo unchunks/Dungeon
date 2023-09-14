@@ -1,5 +1,5 @@
 all : main.cpp
-	g++ main.cpp -o dungeon && ./dungeon
+	g++ main.cpp -g -o dungeon && ./dungeon
 
 commit-% :
 	git add -A

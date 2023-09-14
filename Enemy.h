@@ -1,17 +1,24 @@
 #pragma once
 
+#include <deque>
+
+#include "AStar.h"
 #include "Character.h"
 
-class Enemy : public Character {
+class Enemy : public Character
+{
 public:
     Enemy(int _x, int _y, int _maxHP, int _STR, int _VIT);
-    void randomMove();
-    void setState(STATE state);
+    void walk();
+    void setGoal(CELL_TYPE dungeon[BUFF_FLOOR_H][BUFF_FLOOR_W], glm::vec2 _goal);
 
-    std::vector<glm::vec2> toPlayer;
-    int elapsedTurn;
+    int getRouteSize() {return route.size();}
 
 private:
+    std::deque<glm::vec2> route;
+    glm::vec2 goal;
+    glm::vec2 nextPos;
+    int elapsedTurn;
 
 };
 
@@ -20,16 +27,20 @@ Enemy::Enemy(int _x, int _y, int _maxHP, int _STR, int _VIT)
 {
 }
 
-void Enemy::randomMove() {
-    switch (rand() % 4)
-    {
-        case 0: move(LEFT); break;
-        case 1: move(RIGHT);break;
-        case 2: move(UP);   break;
-        case 3: move(DOWN); break;
-    }
+void Enemy::walk()
+{
+    nextPos = route[0];
+    // route.pop_front();
+    // moveTo(nextPos);
 }
 
-void Enemy::setState(STATE state) {
-    mState = state;
+void Enemy::setGoal(CELL_TYPE dungeon[BUFF_FLOOR_H][BUFF_FLOOR_W], glm::vec2 _goal)
+{
+    goal = _goal;
+    std::cout << "GOAL ==> (" << goal.x << ", " << goal.y << ")\n";
+    route = Astar(dungeon, 0, mPos.x, mPos.y, goal.x, goal.y);
+    for(auto pos: route)
+    {
+        std::cout << "(" << pos.x << ", " << pos.y << ")\n";
+    }
 }

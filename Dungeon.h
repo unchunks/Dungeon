@@ -9,9 +9,7 @@
 #include "Character.h"
 #include "Player.h"
 #include "Enemy.h"
-
-const int NUM_ENEMY = 1;
-const int ENEMY_SEARCH_RANGE = 10;
+#include "Const.h"
 
 class Dungeon
 {
@@ -30,15 +28,9 @@ private:
     Player player = Player(0, 0, 0, 0, 0);
     std::vector<Enemy> enemies = std::vector<Enemy>(NUM_ENEMY, Enemy(0, 0, 0, 0, 0));
 
-// プレイヤーと敵についての関数
     int isOtherPos(int x, int y);
     bool canGetOn(int x, int y);
-
-// プレイヤーについての関数
-    bool isPlayerPos(int x, int y);
-    void arrangementPlayer(int roomCount);
-
-// 敵についての関数
+    glm::vec2 getRandomPos(int roomCount);
 };
 
 void Dungeon::init()
@@ -49,7 +41,17 @@ void Dungeon::init()
     areaDivide.randomEraseDeadEnd();
     areaDivide.identificationWallKind();
 
-    arrangementPlayer(areaDivide.getRoomNum());
+    glm::vec2 pos = getRandomPos(areaDivide.getRoomNum());
+    player.setPos(pos);
+    for(auto& e : enemies)
+    {
+        pos = getRandomPos(areaDivide.getRoomNum());
+        e.setPos(pos);
+    }
+    for(auto e : enemies)
+    {
+        std::cout << "(" << e.getX() << ", " << e.getY() << ")\n";
+    }
 }
 
 void Dungeon::run()
@@ -86,6 +88,15 @@ void Dungeon::update()
     }
     if(!canGetOn(player.getX(), player.getY()))
         player.back();
+    
+    for(auto& e : enemies)
+    {
+        if(e.getRouteSize() < 1)
+            e.setGoal(areaDivide.buff, getRandomPos(areaDivide.areaCount));
+        e.walk();
+        if(!canGetOn(player.getX(), player.getY()))
+            e.back();
+    }
 }
 
 
@@ -104,36 +115,23 @@ int Dungeon::isOtherPos(int x, int y)
 
 bool Dungeon::canGetOn(int x, int y) 
 {
-    std::cout << "1\n";
     if((areaDivide.buff[y+1][x+1] != FLOOR) && (areaDivide.buff[y+1][x+1] != AISLE)) 
         return false;
-    std::cout << "2\n";
     if(isOtherPos(x, y)  > 1)
         return false;
-    std::cout << "3\n";
-    // int same = 0;
-    // for(Character a : actors) {
-    //     if(isEnemyPos(e, x, y)) same++;
-    // }
-    // if(same > 1) return false;
     return true;
 }
 
-bool Dungeon::isPlayerPos(int x, int y) {
-    if((x == player.getX()) && (y == player.getY())) return true;
-    return false;
-}
-
-void Dungeon::arrangementPlayer(int roomCount) {
+glm::vec2 Dungeon::getRandomPos(int roomCount)
+{
     int roomNum = rand() % roomCount;
     Room room = areaDivide.getRoom(roomNum);
-    int px = room.x + rand()%room.w;
-    int py = room.y + rand()%room.h;
-
-    while(!canGetOn(px, py)) {
-        px = room.x + rand()%room.w;
-        py = room.y + rand()%room.h;
+    glm::vec2 pos;
+    pos.x = room.x + rand()%room.w;
+    pos.y = room.y + rand()%room.h;
+    while(!canGetOn(pos.x, pos.y)) {
+        pos.x = room.x + rand()%room.w;
+        pos.y = room.y + rand()%room.h;
     }
-
-    player.setPos(px, py);
+    return pos;
 }

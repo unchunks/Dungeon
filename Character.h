@@ -31,18 +31,20 @@ class Character
 public:
     Character(int _x, int _y, int _maxHP, int _STR, int _VIT, STATE _state, DIRECTION _dir, CHAR_TYPE _type);
 
-    void move(DIRECTION dir);
-    void moveTo(glm::vec2 v);
+    void move(DIRECTION _dir);
+    void moveTo(glm::vec2 _pos);
     void back();
-    void attack(class Character& enemy);
-    void receiveDamage(int damage);
+    void attack(class Character& _enemy);
+    void receiveDamage(int _damage);
 
     void setPos(int _x, int _y);
+    void setPos(glm::vec2 _pos);
     void setState(STATE _state);
     void setDir(DIRECTION _dir);
 
-    int getX() {return x;}
-    int getY() {return y;}
+    glm::vec2 getPos() {return mPos;}
+    int getX() {return mPos.x;}
+    int getY() {return mPos.y;}
     STATE getState() {return mState;}
     DIRECTION getDir() {return mDir;}
     CHAR_TYPE getType() {return mType;}
@@ -51,56 +53,61 @@ protected:
     STATE mState;
     DIRECTION mDir;
     CHAR_TYPE mType;
-    int x, y;
+    glm::vec2 mPos;
     int maxHP, STR, VIT;
     int nowHP;
 };
 
 Character::Character(int _x, int _y, int _maxHP, int _STR, int _VIT, STATE _state, DIRECTION _dir, CHAR_TYPE _type)
-:x(_x), y(_y), maxHP(_maxHP), nowHP(_maxHP), STR(_STR), VIT(_VIT), mState(_state), mDir(_dir), mType(_type)
+:mPos(glm::vec2(_x, _y)), maxHP(_maxHP), nowHP(_maxHP), STR(_STR), VIT(_VIT), mState(_state), mDir(_dir), mType(_type)
 {
 }
 
-void Character::move(DIRECTION dir) {
-    switch (dir) {
-        case LEFT:  x--; break;
-        case RIGHT: x++; break;
-        case UP:    y--; break;
-        case DOWN:  y++; break;
+void Character::move(DIRECTION _dir) {
+    switch (_dir) {
+        case LEFT:  mPos.x--; break;
+        case RIGHT: mPos.x++; break;
+        case UP:    mPos.y--; break;
+        case DOWN:  mPos.y++; break;
     }
-    mDir = dir;
+    mDir = _dir;
 }
 
-void Character::moveTo(glm::vec2 v) {
-    if(v.x > x) move(RIGHT);
-    else if(v.x < x) move(LEFT);
-    else if(v.y > y) move(DOWN);
+void Character::moveTo(glm::vec2 _pos) {
+    if(_pos.x > mPos.x) move(RIGHT);
+    else if(_pos.x < mPos.x) move(LEFT);
+    else if(_pos.y > mPos.y) move(DOWN);
     else move(UP);
 }
 
 void Character::back() {
     switch (mDir) {
-        case LEFT:  x++; break;
-        case RIGHT: x--; break;
-        case UP:    y++; break;
-        case DOWN:  y--; break;
+        case LEFT:  mPos.x++; break;
+        case RIGHT: mPos.x--; break;
+        case UP:    mPos.y++; break;
+        case DOWN:  mPos.y--; break;
     }
 }
 
-void Character::attack(Character& opponent) {
-    opponent.receiveDamage(STR);
+void Character::attack(Character& _opponent) {
+    _opponent.receiveDamage(STR);
 }
 
-void Character::receiveDamage(int damage) {
-    nowHP -= abs(damage - VIT);
+void Character::receiveDamage(int _damage) {
+    nowHP -= abs(_damage - VIT);
     if(nowHP <= 0) {
         mState = DEAD;
     }
 }
 
 void Character::setPos(int _x, int _y) {
-    x = _x;
-    y = _y;
+    mPos.x = _x;
+    mPos.y = _y;
+}
+
+void Character::setPos(glm::vec2 _pos) {
+    mPos.x = _pos.x;
+    mPos.y = _pos.y;
 }
 
 void Character::setState(STATE _state) {

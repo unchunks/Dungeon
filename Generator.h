@@ -8,39 +8,8 @@
 #include "Room.h"
 #include "Player.h"
 #include "Enemy.h"
-
-const int FLOOR_W = 40;
-const int FLOOR_H = 40;
-const int AREA_MAX = 10;
-const int AREA_SIZE_MIN = 10;
-
-enum CELL_TYPE {
-    NONE,
-//0辺床と接地（柱）
-    PILLAR,
-//1辺床と接地
-    WALL_LEFT,
-    WALL_RIGHT,
-    WALL_TOP,
-    WALL_BOTTOM,
-//2辺床と接地
-    WALL_LEFT_TOP,
-    WALL_LEFT_BOTTOM,
-    WALL_RIGHT_TOP,
-    WALL_RIGHT_BOTTOM,
-    WALL_SIDE_LR,
-    WALL_SIDE_TB,
-//3辺床と接地
-    WALL_END_LEFT,
-    WALL_END_RIGHT,
-    WALL_END_TOP,
-    WALL_END_BOTTOM,
-//4辺床と接地
-    WALL_ALL,
-    FLOOR,
-    AISLE,
-    STEP
-};
+#include "Enum.h"
+#include "Const.h"
 
 class Generator
 {
@@ -60,7 +29,7 @@ public:
     int areaCount = 0;
     int randomNumber;
 
-    CELL_TYPE buff[FLOOR_H + 2][FLOOR_W + 2];
+    CELL_TYPE buff[BUFF_FLOOR_H][BUFF_FLOOR_W];
 
 protected:
     CELL_TYPE floorTYPE[FLOOR_H][FLOOR_W];
@@ -204,6 +173,7 @@ void Generator::identificationWallKind() {
 }
 
 void Generator::output(Player player, std::vector<Enemy> enemies) {
+    bool charDrawn = false;
     std::cout << "  ";
     for(int x=0; x<FLOOR_W; x++)
         std::cout << std::setw(2) << x;
@@ -211,17 +181,20 @@ void Generator::output(Player player, std::vector<Enemy> enemies) {
     for(int y=0; y<FLOOR_H; y++) {
         std::cout << std::setw(2) << y;
         for(int x=0; x<FLOOR_W; x++) {
+            charDrawn = false;
             // SDLでは後ろから重ねて描画する
             if((player.getX() == x) && (player.getY() == y)) {
                 std::cout << "@ ";
-                continue;
+                charDrawn = true;
             }
-            // for(auto c : enemies) {
-            //     if((c.getX() == x) && (c.getY() == y)) {
-            //         std::cout << "E ";
-            //         continue;
-            //     }
-            // }
+            for(auto e : enemies) {
+                if((e.getX() == x) && (e.getY() == y)) {
+                    std::cout << "E ";
+                    charDrawn = true;
+                }
+            }
+            if(charDrawn)
+                continue;
             switch(floorTYPE[y][x]) {
                 case NONE:              std::cout << "~ "; break;
                 case PILLAR:            std::cout << "・"; break;
