@@ -9,4 +9,6 @@ push-% :
 	git add -A
 	git commit -m "${@:push-%=%}"
 	git push
-	
+
+test : test.cpp
+	g++ test.cpp -g -o test && ./test

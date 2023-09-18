@@ -1,306 +1,165 @@
 #pragma once
 
-#include <map>
-#include <deque>
 #include <glm/glm.hpp>
+#include <deque>
 
 #include "Enum.h"
 #include "Const.h"
 
-#define KEY(X,Y) ((X) * 100 + (Y))
-#define KEYDATA(X, Y, N) std::pair<int, anode>(KEY(X,Y), N)
-
-// TODO: ダンジョンのマップの計算でそれぞれ1引く 
+enum SEARCH_STATUS{
+	SEARCH_NO_CHECK	= 0,
+	SEARCH_OPEN		= 1,
+	SEARCH_CLOSE	= 2,
+};
 
 typedef struct {
 	int x;
 	int y;
-	int px;
-	int py;
+} POINT;
+
+// 4方向のベクトル設定
+POINT CheckMatrix[] = {
+	{ -1,  0 },		// 左
+	{  1,  0 },		// 右
+	{  0, -1 },		// 上
+	{  0,  1 },		// 下
+};
+
+class MAPCELL {
+public:
+	MAPCELL()
+	:status(2), cost(0), SearchStatus(SEARCH_NO_CHECK), parent(NO_DIRECTION)
+	{}
+	int status;					// 2:壁 0:床 1:ルート
 	int cost;
-} anode;
+	SEARCH_STATUS SearchStatus;	// 0:未調査 1:オープン 2:クローズ
+	DIRECTION parent;			// 親の向き
+};
 
-std::map <int, anode> mapOpen;
-std::map <int, anode> mapClose;
-
+MAPCELL data[FLOOR_H][FLOOR_W];
+glm::vec2 START, GOAL;
 std::deque<glm::vec2> route;
 
-int GX, GY, SX, SY;
-
-// マンハッタン距離を斜め移動ありを考慮して求める
-int GetDistance(int from_x, int from_y, int to_x, int to_y)
+// マンハッタン距離を求める
+int GetDistance(int from_x, int from_y)
 {
-	int cx = from_x - to_x;
-	int cy = from_y - to_y;
-
-	if(cx < 0) cx *= -1;
-	if(cy < 0) cy *= -1;
-
-	// 推定移動コストを計算
-	if(cx < cy){
-		return (cx + (cy - cx));
-	}else{
-		return (cy + (cx - cy));
-	}
+	int dis = abs(from_x - GOAL.x) + abs(from_y - GOAL.y);
+	return dis;
 }
 
-// ノード情報を一度にセットする
-anode *SetNode(anode *n, int _x, int _y, int _px, int _py, int _cost)
-{
-	n->x    = _x;
-	n->y    = _y;
-	n->px   = _px;
-	n->py   = _py;
-	n->cost = _cost;
-
-	return n;
-}
-
-// 指定した地点からスタート地点までの距離を求める
+// スタート位置から現在地までのコスト集計
 int BackTrace(int x, int y)
 {
-	if(x == SX && y == SY){
-		return 1;
-	}
+	if(x == START.x && y == START.y) return 0;
 
-	std::map<int, anode>::iterator tmp = mapClose.find(KEY(x,y)) ;
-	
-	if(tmp == mapClose.end()) return 0;
-	
-	return BackTrace(tmp->second.px, tmp->second.py) + 1;
+	int parent_way = data[y][x].parent;
+	return BackTrace(
+		x + CheckMatrix[parent_way].x,
+		y + CheckMatrix[parent_way].y
+	) + 1;
 }
 
 // A*で経路探査する
-int Search(CELL_TYPE dungeon[BUFF_FLOOR_H][BUFF_FLOOR_W], int count){
-	
-	// openリストが空なら終了
-	if(mapOpen.empty()) return -9;
-
-	anode nodes[4];
-
-	int way[4][2] = {
-		{  0, -1},
-		{  1,  0},
-		{  0,  1},
-		{ -1,  0}
-	};
-
-	std::map<int, anode>::iterator it;
-	std::map<int, anode>::iterator it_min;
-	
-	anode n;
-
-	int cost_min = 9999;
+int Search(int count){
+	// 検索中のノード、X・Y座標、実コスト
+	MAPCELL *n = NULL;
+	int CX = 0;
+	int CY = 0;
 	int BackCost = 0;
-	
-	//Openリストから最小のコストを持つノードを取り出す
-	it = mapOpen.begin();
-	while(it != mapOpen.end()){
-		if(cost_min > GetDistance(it->second.x,it->second.y,GX,GY) ){
-			cost_min = GetDistance(it->second.x,it->second.y,GX,GY);
-			it_min = it;
+
+	// コストが最小のオープンノードを探す
+	int cost_min = 9999;
+	for(int y = 0; y < FLOOR_H; y++){
+		for(int x = 0; x < FLOOR_W; x++){
+			if(data[y][x].SearchStatus != SEARCH_OPEN)continue;	// オープンでなければスキップ
+			int cost = GetDistance(x,y);
+			if(cost > cost_min)continue;	// 今よりゴールに遠ければスキップ
+			
+			cost_min = cost;
+			n = &data[y][x];
+			CX = x;
+			CY = y;
+
 		}
-		it++;
 	}
 
-	SetNode(
-		&n,
-		it_min->second.x,   it_min->second.y,
-		it_min->second.px,  it_min->second.py,
-		it_min->second.cost
-	);
-	
-	// OpenリストからCloseリストへ移動
-	mapClose.insert(KEYDATA( n.x, n.y, n));
-	mapOpen.erase(KEY(n.x, n.y));
+	// オープンノードがなければ終了(ゴールが見つからない)
+	if(n == NULL) return -9;
 
-	// 最小コストのノードからスタートまでの移動コスト
-	BackCost = BackTrace(n.x, n.y);
+	// ノードをクローズする
+	n->SearchStatus = SEARCH_CLOSE;
 
+	BackCost = BackTrace(CX, CY);
+
+	// 4方向の移動先のコスト計算
 	for(int i = 0; i < 4; i++){
-		// 隣接するマスの座標を計算
-		int cx = n.x + way[i][0];
-		int cy = n.y + way[i][1];
+		// 計算中の座標
+		int check_x = CX + CheckMatrix[i].x;
+		int check_y = CY + CheckMatrix[i].y;
 
-		if(cx < 0) continue;
-		if(cy < 0) continue;
+		// マップ外でスキップ
+		if(check_x < 0) continue;
+		if(check_y < 0) continue;
+		if(check_x >= FLOOR_W ) continue;
+		if(check_y >= FLOOR_H) continue;
 
-		if(cx >= FLOOR_W) continue;
-		if(cy >= FLOOR_H) continue;
+		// 通れないところをよける
+		if(data[check_y][check_x].status == 2) continue;
 
-		// 通れない所をよける
-		if((dungeon[cy+1][cx+1] != FLOOR) && (dungeon[cy+1][cx+1] != AISLE)) continue;
+		int estimate_cost = BackCost + GetDistance(check_x, check_y) + 1;
+		MAPCELL *cell = &data[check_y][check_x];
 
-		SetNode(
-			&nodes[i],
-			cx,  cy,
-			n.x, n.y,
-			BackCost + GetDistance(cx, cy, GX, GY) + 1	// 推定移動コスト
-		);
+		if(data[check_y][check_x].SearchStatus == SEARCH_NO_CHECK){	// 計算中の座標が未チェック
+			cell->parent 	   = (DIRECTION)(int)(-1.33 * i*i*i + 6 * i*i + -5.67 * i + 1);
+			cell->SearchStatus = SEARCH_OPEN;
 
-		//Openリストにこの座標と同じノードがあるか確認
-		if(mapOpen.find(KEY(cx,cy)) != mapOpen.end()){
-			if(nodes[i].cost < mapOpen[KEY(cx,cy)].cost){
-				mapOpen[KEY(cx,cy)].px = n.x;
-				mapOpen[KEY(cx,cy)].py = n.y;
-
-				mapOpen[KEY(cx,cy)].cost = nodes[i].cost;
-			}
-			continue;
+		}else if(estimate_cost < cell->cost){	// 計算中の座標のコストが更新可能
+			cell->parent       = (DIRECTION)(int)(-1.33 * i*i*i + 6 * i*i + -5.67 * i + 1);
+			cell->cost         = estimate_cost;
+			cell->SearchStatus = SEARCH_OPEN;
 		}
-
-		//Closeリストにこの座標と同じノードがあるか確認
-		if(mapClose.find(KEY(cx, cy)) != mapClose.end()){
-			if(nodes[i].cost < mapClose[KEY(cx,cy)].cost){
-				anode tmp;
-
-				SetNode(
-					&tmp,
-					cx, cy,
-					n.x, n.y,
-					nodes[i].cost
-				);
-
-				mapOpen.insert(KEYDATA(cx, cy, tmp));
-				mapClose.erase(KEY(cx, cy));
-			}
-			continue;
-		}
-
-		// 見つからなければ新規としてOpenリストへ追加
-		mapOpen.insert(KEYDATA(nodes[i].x, nodes[i].y, nodes[i]));
 	}
 
-	std::cout << "(" << n.x << ", " << n.y << ")\n";
-
-	//見つかったら探索終了
-	if(n.x == GX && n.y == GY) {
-		route.push_front({n.x, n.y});
+	// 見つかったら探索終了
+	if(CX == GOAL.x && CY == GOAL.y){
 		return -1;
 	}
-	if(Search(dungeon, count + 1) == -1) {
-		route.push_front({n.x, n.y});
-		return -1;
-	}
-	return 0;
+
+	return Search(count + 1);
 }
 
-// A*で経路探査する
-std::deque<glm::vec2> Astar(CELL_TYPE dungeon[BUFF_FLOOR_H][BUFF_FLOOR_W], int count, int sx, int sy, int gx, int gy){
+// ゴールから逆算
+void TraceRoute(int x, int y)
+{
+	POINT *parent_way = &CheckMatrix[data[y][x].parent];
+	route.push_front(glm::vec2(x, y));
+	data[y][x].status = 1;
+	if((x == START.x) && (y == START.y))
+		return;
+	TraceRoute(x + parent_way->x, y + parent_way->y);
+}
 
-	SX = sx;
-	SY = sy;
-	GX = gx;
-	GY = gy;
-
-	// openリストが空なら終了
-	if(mapOpen.empty()) return std::deque<glm::vec2>(0);
-
-	anode nodes[4];
-
-	int way[4][2] = {
-		{  0, -1},
-		{  1,  0},
-		{  0,  1},
-		{ -1,  0}
-	};
-
-	std::map<int, anode>::iterator it;
-	std::map<int, anode>::iterator it_min;
-	
-	anode n;
-
-	int cost_min = 9999;
-	int BackCost = 0;
-	
-	//Openリストから最小のコストを持つノードを取り出す
-	it = mapOpen.begin();
-	while(it != mapOpen.end()){
-		if(cost_min > GetDistance(it->second.x,it->second.y,GX,GY) ){
-			cost_min = GetDistance(it->second.x,it->second.y,GX,GY);
-			it_min = it;
+std::deque<glm::vec2> AStar(CELL_TYPE def_data[FLOOR_H][FLOOR_W], glm::vec2 _start, glm::vec2 _goal)
+{
+	route.clear();
+	START = _start;
+	GOAL = _goal;
+	for(int y = 0; y < FLOOR_H; y++)
+		for(int x = 0; x < FLOOR_W; x++)
+			data[y][x] = MAPCELL();
+	// マップ変換
+    for(int y = 0; y < FLOOR_H; y++){
+		for(int x = 0; x < FLOOR_W; x++){
+            if((def_data[y][x] == FLOOR) || (def_data[y][x] == AISLE))
+                data[y][x].status = 0;	// 床
+            else 
+                data[y][x].status = 2;	// 壁
 		}
-		it++;
 	}
 
-	SetNode(
-		&n,
-		it_min->second.x,   it_min->second.y,
-		it_min->second.px,  it_min->second.py,
-		it_min->second.cost
-	);
-	
-	// OpenリストからCloseリストへ移動
-	mapClose.insert(KEYDATA( n.x, n.y, n));
-	mapOpen.erase(KEY(n.x, n.y));
-
-	// 最小コストのノードからスタートまでの移動コスト
-	BackCost = BackTrace(n.x, n.y);
-
-	for(int i = 0; i < 4; i++){
-		// 隣接するマスの座標を計算
-		int cx = n.x + way[i][0];
-		int cy = n.y + way[i][1];
-
-		if(cx < 0) continue;
-		if(cy < 0) continue;
-
-		if(cx >= FLOOR_W) continue;
-		if(cy >= FLOOR_H) continue;
-
-		// 通れない所をよける
-		if((dungeon[cy+1][cx+1] != FLOOR) && (dungeon[cy+1][cx+1] != AISLE)) continue;
-
-		SetNode(
-			&nodes[i],
-			cx,  cy,
-			n.x, n.y,
-			BackCost + GetDistance(cx, cy, GX, GY) + 1	// 推定移動コスト
-		);
-
-		//Openリストにこの座標と同じノードがあるか確認
-		if(mapOpen.find(KEY(cx,cy)) != mapOpen.end()){
-			if(nodes[i].cost < mapOpen[KEY(cx,cy)].cost){
-				mapOpen[KEY(cx,cy)].px = n.x;
-				mapOpen[KEY(cx,cy)].py = n.y;
-
-				mapOpen[KEY(cx,cy)].cost = nodes[i].cost;
-			}
-			continue;
-		}
-
-		//Closeリストにこの座標と同じノードがあるか確認
-		if(mapClose.find(KEY(cx, cy)) != mapClose.end()){
-			if(nodes[i].cost < mapClose[KEY(cx,cy)].cost){
-				anode tmp;
-
-				SetNode(
-					&tmp,
-					cx, cy,
-					n.x, n.y,
-					nodes[i].cost
-				);
-
-				mapOpen.insert(KEYDATA(cx, cy, tmp));
-				mapClose.erase(KEY(cx, cy));
-			}
-			continue;
-		}
-
-		// 見つからなければ新規としてOpenリストへ追加
-		mapOpen.insert(KEYDATA(nodes[i].x, nodes[i].y, nodes[i]));
-	}
-
-	std::cout << "(" << n.x << ", " << n.y << ")\n";
-
-	//見つかったら探索終了
-	if(n.x == GX && n.y == GY) {
-		route.push_front({n.x, n.y});
-	}
-
-	if(Search(dungeon, count + 1) == -1) {
-		route.push_front({n.x, n.y});
-	}
-
+	// 開始位置をオープンに
+    data[(int)START.y][(int)START.x].SearchStatus = SEARCH_OPEN;
+    Search(0);
+	TraceRoute(GOAL.x, GOAL.y);
 	return route;
 }

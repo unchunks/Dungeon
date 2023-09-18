@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 
+#include "Enum.h"
+
 enum STATE {
     // Player
     ALIVE,
@@ -14,12 +16,6 @@ enum STATE {
     ESCAPE,
     // both
     DEAD
-};
-enum DIRECTION {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN
 };
 enum CHAR_TYPE {
     PLAYER,

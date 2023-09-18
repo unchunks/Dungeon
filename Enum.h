@@ -27,3 +27,11 @@ enum CELL_TYPE {
     AISLE,
     STEP
 };
+
+enum DIRECTION {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    NO_DIRECTION
+};

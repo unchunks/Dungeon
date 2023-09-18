@@ -91,11 +91,25 @@ void Dungeon::update()
     
     for(auto& e : enemies)
     {
-        if(e.getRouteSize() < 1)
-            e.setGoal(areaDivide.buff, getRandomPos(areaDivide.areaCount));
+        std::cout << "残り距離　: " << e.getRouteSize() << std::endl;
+        std::cout << "経過ターン: " << e.getElapsedTurn() << std::endl;
+        switch(e.getState())
+        {
+        case SEARCH:
+            if(abs(e.getX() - player.getX()) + abs(e.getY() - player.getY()) <= ENEMY_FIND_RANGE)
+                e.setState(FOUND);
+            if((e.getRouteSize() < 1) || (e.getElapsedTurn() > ENEMY_SEARCH_INTERVAL))
+                e.setGoal(areaDivide.getFloor(), getRandomPos(areaDivide.areaCount));
+
+        case FOUND:
+            if(abs(e.getX() - player.getX()) + abs(e.getY() - player.getY()) > ENEMY_FIND_RANGE)
+                e.setState(SEARCH);
+            if((e.getRouteSize() < 1) || (e.getElapsedTurn() > ENEMY_SEARCH_INTERVAL))
+                e.setGoal(areaDivide.getFloor(), player.getPos());
+        }
         e.walk();
-        if(!canGetOn(player.getX(), player.getY()))
-            e.back();
+            if(!canGetOn(player.getX(), player.getY()))
+                e.back();
     }
 }
 

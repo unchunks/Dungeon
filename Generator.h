@@ -25,6 +25,7 @@ public:
     Room getRoom(int id) { return rooms[id]; }
     int getAreaNum() { return areas.size(); }
     int getRoomNum() { return rooms.size(); }
+    CELL_TYPE (*getFloor())[FLOOR_W] { return floorTYPE; }
 
     int areaCount = 0;
     int randomNumber;
