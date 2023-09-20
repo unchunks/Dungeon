@@ -7,7 +7,7 @@
 class AreaDivide : public Generator
 {
 public:
-    void generate();
+    void generate(int _randomNumber);
 private:
     void divide(int ID);
 };
@@ -55,16 +55,14 @@ void AreaDivide::divide(int ID)
         divide(newID);
 }
 
-void AreaDivide::generate()
+void AreaDivide::generate(int _randomNumber)
 {
-    std::random_device seed;
-    std::mt19937 engine(seed());
-    std::uniform_int_distribution<int> randNum(AREA_MAX, 100);
-    randomNumber = randNum(engine);
+    randomNumber = _randomNumber;
 
     areas = std::vector<Area>(1, Area(0, 0, FLOOR_W, FLOOR_H));
     areaCount = 0;
     divide(areaCount);
+    if(areaCount < 5) divide(areaCount);
 
 // 各エリアに対する処理
     for(auto area : areas) {
@@ -92,4 +90,16 @@ void AreaDivide::generate()
             }
         }
     }
+
+    int roomNum = rand() % areaCount;
+    Room room = rooms[roomNum];
+    glm::vec2 pos;
+    while((floorTYPE[(int)pos.y][(int)pos.x] != FLOOR)
+        && (floorTYPE[(int)pos.y][(int)pos.x] != AISLE))
+    {
+        pos.x = room.x + rand()%room.w;
+        pos.y = room.y + rand()%room.h;
+    }
+    floorTYPE[(int)pos.y][(int)pos.x] = STEP;
+    std::cout << "階段(" << pos.x << ", " << pos.y << ")\n";
 }

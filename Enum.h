@@ -35,3 +35,16 @@ enum DIRECTION {
     DOWN,
     NO_DIRECTION
 };
+
+enum CHAR_TYPE {
+    PLAYER,
+    ENEMY
+};
+
+// TODO: キャラを作ったらConst.hでステータスを作成
+enum ENEMY_TYPE {
+    SLIME,
+    GOBLIN,
+    DRAGON,
+    ENEMY_TYPE_NUMBER
+};

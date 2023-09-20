@@ -18,7 +18,7 @@ glm::vec2 getRandomPos(int roomCount)
     return pos;
 }
 
-// TODO: AStarのテスト
+// AStarのテスト
 
 void out()
 {

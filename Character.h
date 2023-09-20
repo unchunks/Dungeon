@@ -12,25 +12,21 @@ enum STATE {
     // AI
     SEARCH,
     FOUND,
-    ATTACK,
     ESCAPE,
     // both
     DEAD
-};
-enum CHAR_TYPE {
-    PLAYER,
-    ENEMY
 };
 
 class Character
 {
 public:
+    Character();
     Character(int _x, int _y, int _maxHP, int _STR, int _VIT, STATE _state, DIRECTION _dir, CHAR_TYPE _type);
 
     void move(DIRECTION _dir);
     void moveTo(glm::vec2 _pos);
     void back();
-    void attack(class Character& _enemy);
+    virtual void attack(class Character& _enemy);
     void receiveDamage(int _damage);
 
     void setPos(int _x, int _y);
@@ -38,21 +34,24 @@ public:
     void setState(STATE _state);
     void setDir(DIRECTION _dir);
 
-    glm::vec2 getPos() {return mPos;}
-    int getX() {return mPos.x;}
-    int getY() {return mPos.y;}
+    int getNowHP() {return nowHP;}
     STATE getState() {return mState;}
     DIRECTION getDir() {return mDir;}
     CHAR_TYPE getType() {return mType;}
+    glm::vec2 getPos() {return mPos;}
 
 protected:
+    int maxHP, STR, VIT;
+    int nowHP;
     STATE mState;
     DIRECTION mDir;
     CHAR_TYPE mType;
     glm::vec2 mPos;
-    int maxHP, STR, VIT;
-    int nowHP;
 };
+
+Character::Character()
+{
+}
 
 Character::Character(int _x, int _y, int _maxHP, int _STR, int _VIT, STATE _state, DIRECTION _dir, CHAR_TYPE _type)
 :mPos(glm::vec2(_x, _y)), maxHP(_maxHP), nowHP(_maxHP), STR(_STR), VIT(_VIT), mState(_state), mDir(_dir), mType(_type)
@@ -90,7 +89,10 @@ void Character::attack(Character& _opponent) {
 }
 
 void Character::receiveDamage(int _damage) {
-    nowHP -= abs(_damage - VIT);
+    _damage -= VIT;
+    if(_damage < -50) return;
+    if(_damage <= 0) _damage = 1;
+    nowHP -= _damage;
     if(nowHP <= 0) {
         mState = DEAD;
     }

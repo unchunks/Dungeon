@@ -184,13 +184,13 @@ void Generator::output(Player player, std::vector<Enemy> enemies) {
         for(int x=0; x<FLOOR_W; x++) {
             charDrawn = false;
             // SDLでは後ろから重ねて描画する
-            if((player.getX() == x) && (player.getY() == y)) {
+            if((player.getPos().x == x) && (player.getPos().y == y)) {
                 std::cout << "@ ";
                 charDrawn = true;
             }
             for(auto e : enemies) {
-                if((e.getX() == x) && (e.getY() == y)) {
-                    std::cout << "E ";
+                if((e.getPos().x == x) && (e.getPos().y == y)) {
+                    std::cout << e.getIcon();
                     charDrawn = true;
                 }
             }
@@ -215,7 +215,7 @@ void Generator::output(Player player, std::vector<Enemy> enemies) {
                 case WALL_END_BOTTOM:   std::cout << "Ａ"; break;
                 case WALL_ALL:          std::cout << "■ "; break;
                 case FLOOR: case AISLE: std::cout << "  "; break;
-                case STEP:              std::cout << "S "; break;
+                case STEP:              std::cout << "▃▅"; break;
             }
         }
         // if(isPlayerPos(x, y)) {
